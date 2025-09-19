@@ -1,71 +1,96 @@
 @import "tailwindcss";
-
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Permanent+Marker&family=Inter:wght@400;600&display=swap');
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
+  font-family: 'Inter', sans-serif;
+  color-scheme: dark;
+  color: #e6e6e6;
+  background: #0d0d0d;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background: #0d0d0d url('/src/assets/emo_texture.png');
+  background-size: cover;
+  background-repeat: repeat;
+  color: #e6e6e6;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+a {
+  font-weight: 500;
+  color: #b10f2e;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+a:hover {
+  color: #6b4f82;
+}
+
+h1, h2, h3 {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.handwritten {
+  font-family: 'Permanent Marker', cursive;
+  letter-spacing: 0.02em;
 }
 
 button {
   border-radius: 8px;
-  border: 1px solid transparent;
+  border: 1px solid #2e2e2e;
   padding: 0.6em 1.2em;
   font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  background: #2e2e2e;
+  color: #e6e6e6;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  box-shadow: 0 2px 8px 0 #0d0d0d44;
 }
 button:hover {
-  border-color: #646cff;
+  background: #b10f2e;
+  color: #fff;
+  border-color: #b10f2e;
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid #6b4f82;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+.emo-border {
+  border: 2px dashed #6b4f82;
+  border-radius: 12px;
+  box-shadow: 0 0 12px 0 #6b4f8233;
 }
+
+.emo-card {
+  background: #2e2e2e99;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px 0 #0d0d0d88;
+  padding: 2em;
+  margin: 1.5em 0;
+}
+
+.emo-underline {
+  text-decoration: underline wavy #b10f2e;
+}
+
+.emo-glitch {
+  text-shadow: 2px 0 #b10f2e, -2px 0 #6b4f82, 0 2px #7da0c8;
+}
+
+.emo-fade {
+  opacity: 0.85;
+  filter: blur(0.5px);
+}
+
+/* Add more emo/texture classes as needed */

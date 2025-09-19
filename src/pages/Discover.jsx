@@ -20,37 +20,40 @@ export default function Discover() {
   }, [mood]);
 
   return (
-    <div>
-      <h1>Discover</h1>
-      <label>
-        Mood:&nbsp;
-        <select value={mood} onChange={(e) => setMood(e.target.value)}>
-          <option value="">All</option>
-          <option value="happy">Happy</option>
-          <option value="calm">Calm</option>
-          <option value="sad">Sad</option>
-          <option value="energetic">Energetic</option>
-        </select>
-      </label>
+    <div className="w-full flex flex-col items-center">
+      <div className="emo-card w-full max-w-2xl">
+        <h1 className="text-4xl font-emo text-blood emo-glitch mb-4">Discover</h1>
+        <label className="block mb-4">
+          <span className="mr-2">Mood:</span>
+          <select value={mood} onChange={(e) => setMood(e.target.value)} className="bg-ash text-pale rounded px-2 py-1 focus:outline-none">
+            <option value="">All</option>
+            <option value="happy">Happy</option>
+            <option value="calm">Calm</option>
+            <option value="sad">Sad</option>
+            <option value="energetic">Energetic</option>
+          </select>
+        </label>
 
-      {loading ? <p>Loading…</p> : (
-        <ul>
-          {recs.map((r) => (
-            <li key={r.trackId} style={{ margin: "12px 0" }}>
-              <div><strong>{r.title}</strong> — {r.artist}</div>
-              {r.explanation && <div style={{ fontStyle: "italic" }}>{r.explanation}</div>}
-              <div>
-                Rate:&nbsp;
-                {[1,2,3,4,5].map(n => (
-                  <button key={n} onClick={() => rateTrack(r.trackId, n)} aria-label={`Rate ${n}`}>
-                    {n}
-                  </button>
-                ))}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+        {loading ? <p className="text-pale">Loading…</p> : (
+          <ul>
+            {recs.map((r) => (
+              <li key={r.trackId} className="mb-6 p-4 rounded bg-jet bg-opacity-80 shadow emo-border">
+                <div className="font-emo text-xl text-violet mb-1">{r.title}</div>
+                <div className="text-pale mb-1">{r.artist}</div>
+                {r.explanation && <div className="italic text-sm text-gray-400 mb-2">{r.explanation}</div>}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-400">Rate:</span>
+                  {[1,2,3,4,5].map(n => (
+                    <button key={n} onClick={() => rateTrack(r.trackId, n)} aria-label={`Rate ${n}`} className="px-2 py-1 rounded bg-ash text-pale hover:bg-blood hover:text-white transition-colors">
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }

@@ -20,12 +20,20 @@ export default function Login() {
   }
 
   return (
-    <form onSubmit={onSubmit}>
-      <h2>Login</h2>
-      <label>Email <input value={email} onChange={(e)=>setEmail(e.target.value)} /></label><br/>
-      <label>Password <input type="password" value={pw} onChange={(e)=>setPw(e.target.value)} /></label><br/>
-      <button>Sign in</button>
-      {msg && <p role="alert">{msg}</p>}
-    </form>
+    <div className="w-full flex flex-col items-center">
+      <form onSubmit={onSubmit} className="emo-card w-full max-w-md flex flex-col gap-4">
+        <h2 className="text-3xl font-emo text-blood emo-glitch mb-2">Login</h2>
+        <label className="flex flex-col text-pale">
+          Email
+          <input value={email} onChange={(e)=>setEmail(e.target.value)} className="mt-1 px-2 py-1 rounded bg-ash text-pale border-2 border-violet focus:border-blood focus:ring-2 focus:ring-blood focus:outline-none transition-all" />
+        </label>
+        <label className="flex flex-col text-pale">
+          Password
+          <input type="password" value={pw} onChange={(e)=>setPw(e.target.value)} className="mt-1 px-2 py-1 rounded bg-ash text-pale border-2 border-violet focus:border-blood focus:ring-2 focus:ring-blood focus:outline-none transition-all" />
+        </label>
+        <button className="mt-2 px-4 py-2 rounded bg-blood text-white font-semibold hover:bg-violet transition-colors">Sign in</button>
+        {msg && <p role="alert" className="text-center text-violet mt-2">{msg}</p>}
+      </form>
+    </div>
   );
 }
