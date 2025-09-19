@@ -1,10 +1,11 @@
+-- Active: 1758247580538@@127.0.0.1@1521@freepdb1@MCTUNES
 -- Run the CREATE USER block once as SYS (or another DBA), then comment it out
 -- so the file is re-runnable.
-CREATE USER mctunes IDENTIFIED BY "change_me" DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS;
-GRANT CONNECT, RESOURCE TO mctunes;
-ALTER USER mctunes QUOTA UNLIMITED ON USERS;
+-- CREATE USER mctunes IDENTIFIED BY "change_me" DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS;
+-- GRANT CONNECT, RESOURCE TO mctunes;
+-- ALTER USER mctunes QUOTA UNLIMITED ON USERS;
 
-ALTER SESSION SET CURRENT_SCHEMA = mctunes;
+-- ALTER SESSION SET CURRENT_SCHEMA = mctunes;
 
 -- Lookup tables (enum strategy = lookup, flexible & queryable)
 CREATE TABLE moods (
