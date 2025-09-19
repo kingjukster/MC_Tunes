@@ -1,29 +1,53 @@
---------------------------------------------------------
--- V3__seed.sql
--- Seed lookup tables: moods, activities, genres
---------------------------------------------------------
+ALTER SESSION SET CURRENT_SCHEMA = mctunes;
 
--- Moods
-INSERT INTO moods (code, display_name) VALUES ('happy', 'Happy');
-INSERT INTO moods (code, display_name) VALUES ('calm', 'Calm');
-INSERT INTO moods (code, display_name) VALUES ('sad', 'Sad');
-INSERT INTO moods (code, display_name) VALUES ('energetic', 'Energetic');
-INSERT INTO moods (code, display_name) VALUES ('focus', 'Focus');
-INSERT INTO moods (code, display_name) VALUES ('party', 'Party');
-INSERT INTO moods (code, display_name) VALUES ('custom', 'Custom');
+------------------------------------------------------------
+-- Moods (upsert by code)
+------------------------------------------------------------
+MERGE INTO moods m
+USING (
+  SELECT 'happy' code, 'Happy' display_name FROM dual UNION ALL
+  SELECT 'calm' , 'Calm'  FROM dual UNION ALL
+  SELECT 'sad'  , 'Sad'   FROM dual UNION ALL
+  SELECT 'energetic','Energetic' FROM dual UNION ALL
+  SELECT 'focus','Focus' FROM dual UNION ALL
+  SELECT 'party','Party' FROM dual UNION ALL
+  SELECT 'custom','Custom' FROM dual
+) src
+ON (m.code = src.code)
+WHEN MATCHED THEN UPDATE SET m.display_name = src.display_name
+WHEN NOT MATCHED THEN INSERT (code, display_name) VALUES (src.code, src.display_name);
 
--- Activities
-INSERT INTO activities (name, description, is_default) VALUES ('Studying', 'Focus and learn', 1);
-INSERT INTO activities (name, description, is_default) VALUES ('Workout', 'Exercise / gym time', 1);
-INSERT INTO activities (name, description, is_default) VALUES ('Commute', 'Travel / commute', 1);
-INSERT INTO activities (name, description, is_default) VALUES ('Relaxing', 'Chill / downtime', 1);
-INSERT INTO activities (name, description, is_default) VALUES ('Party', 'Party / socializing', 1);
+------------------------------------------------------------
+-- Activities (upsert by name)
+------------------------------------------------------------
+MERGE INTO activities a
+USING (
+  SELECT 'Studying' name, 'Focus and learn' descr, 1 deflt FROM dual UNION ALL
+  SELECT 'Workout'  , 'Exercise / gym time', 1 FROM dual UNION ALL
+  SELECT 'Commute'  , 'Travel / commute'   , 1 FROM dual UNION ALL
+  SELECT 'Relaxing' , 'Chill / downtime'   , 1 FROM dual UNION ALL
+  SELECT 'Party'    , 'Party / socializing', 1 FROM dual
+) src
+ON (a.name = src.name)
+WHEN MATCHED THEN UPDATE SET a.description = src.descr, a.is_default = src.deflt
+WHEN NOT MATCHED THEN INSERT (name, description, is_default)
+VALUES (src.name, src.descr, src.deflt);
 
--- Genres (minimal seed; expand later)
-INSERT INTO genres (name) VALUES ('Pop');
-INSERT INTO genres (name) VALUES ('Hip-Hop');
-INSERT INTO genres (name) VALUES ('Rock');
-INSERT INTO genres (name) VALUES ('Jazz');
-INSERT INTO genres (name) VALUES ('Classical');
-INSERT INTO genres (name) VALUES ('Electronic');
-INSERT INTO genres (name) VALUES ('Country');
+------------------------------------------------------------
+-- Genres (upsert by name)
+------------------------------------------------------------
+INSERT INTO genres (name)
+SELECT s.name
+FROM (
+  SELECT 'Pop' name FROM dual UNION ALL
+  SELECT 'Hip-Hop'   FROM dual UNION ALL
+  SELECT 'Rock'      FROM dual UNION ALL
+  SELECT 'Jazz'      FROM dual UNION ALL
+  SELECT 'Classical' FROM dual UNION ALL
+  SELECT 'Electronic'FROM dual UNION ALL
+  SELECT 'Country'   FROM dual
+) s
+WHERE NOT EXISTS (SELECT 1 FROM genres g WHERE g.name = s.name);
+
+
+COMMIT;

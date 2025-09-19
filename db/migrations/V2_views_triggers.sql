@@ -5,34 +5,82 @@
 
 -- Trigger to update song_aggregates when a rating is inserted/updated/deleted
 
-CREATE OR REPLACE TRIGGER trg_ratings_aiud
-AFTER INSERT OR UPDATE OR DELETE ON ratings
-FOR EACH ROW
-DECLARE
+-- Clean up old row-level triggers (if they exist)
 BEGIN
-  IF INSERTING OR UPDATING THEN
-    MERGE INTO song_aggregates sa
-    USING (SELECT :NEW.song_id AS song_id FROM dual) src
-    ON (sa.song_id = src.song_id)
-    WHEN MATCHED THEN
-      UPDATE SET
-        rating_count = (SELECT COUNT(*) FROM ratings r WHERE r.song_id = :NEW.song_id),
-        rating_avg   = (SELECT ROUND(AVG(r.rating_value),3) FROM ratings r WHERE r.song_id = :NEW.song_id),
-        last_rated_at = (SELECT MAX(r.rated_at) FROM ratings r WHERE r.song_id = :NEW.song_id)
-    WHEN NOT MATCHED THEN
-      INSERT (song_id, rating_count, rating_avg, last_rated_at)
-      VALUES (:NEW.song_id, 1, :NEW.rating_value, :NEW.rated_at);
-  ELSIF DELETING THEN
-    MERGE INTO song_aggregates sa
-    USING (SELECT :OLD.song_id AS song_id FROM dual) src
-    ON (sa.song_id = src.song_id)
-    WHEN MATCHED THEN
-      UPDATE SET
-        rating_count = (SELECT COUNT(*) FROM ratings r WHERE r.song_id = :OLD.song_id),
-        rating_avg   = (SELECT NVL(ROUND(AVG(r.rating_value),3),0) FROM ratings r WHERE r.song_id = :OLD.song_id),
-        last_rated_at = (SELECT MAX(r.rated_at) FROM ratings r WHERE r.song_id = :OLD.song_id);
-  END IF;
+  EXECUTE IMMEDIATE 'DROP TRIGGER trg_ratings_aiud';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -4080 THEN RAISE; END IF;
 END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TRIGGER trg_ratings_agg_ins_upd';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -4080 THEN RAISE; END IF;
+END;
+/
+
+BEGIN
+  EXECUTE IMMEDIATE 'DROP TRIGGER trg_ratings_agg_del';
+EXCEPTION WHEN OTHERS THEN IF SQLCODE != -4080 THEN RAISE; END IF;
+END;
+/
+
+-- Compound trigger: collect affected song_ids during DML,
+-- then update song_aggregates once per statement (no mutating-table read)
+CREATE OR REPLACE TRIGGER trg_ratings_agg
+FOR INSERT OR UPDATE OF rating_value OR DELETE ON ratings
+COMPOUND TRIGGER
+  TYPE t_song_ids IS TABLE OF NUMBER INDEX BY PLS_INTEGER;
+  g_ids t_song_ids;
+
+  PROCEDURE add_id(p_id NUMBER) IS
+    found BOOLEAN := FALSE;
+  BEGIN
+    IF p_id IS NULL THEN RETURN; END IF;
+    -- de-dupe: simple linear scan (small per-stmt sets)
+    FOR i IN 1 .. NVL(g_ids.COUNT, 0) LOOP
+      IF g_ids(i) = p_id THEN found := TRUE; EXIT; END IF;
+    END LOOP;
+    IF NOT found THEN
+      g_ids(NVL(g_ids.COUNT,0)+1) := p_id;
+    END IF;
+  END;
+
+  AFTER EACH ROW IS
+  BEGIN
+    IF INSERTING OR UPDATING THEN add_id(:NEW.song_id); END IF;
+    IF DELETING THEN add_id(:OLD.song_id); END IF;
+  END AFTER EACH ROW;
+
+    AFTER STATEMENT IS
+  BEGIN
+    FOR i IN 1 .. NVL(g_ids.COUNT, 0) LOOP
+      DECLARE
+        v_song_id   NUMBER := g_ids(i);
+        v_cnt       NUMBER;
+        v_avg       NUMBER;
+        v_last      TIMESTAMP;
+      BEGIN
+        SELECT COUNT(*), ROUND(AVG(rating_value),3), MAX(rated_at)
+          INTO v_cnt, v_avg, v_last
+          FROM ratings
+         WHERE song_id = v_song_id;
+
+        IF v_cnt = 0 THEN
+          DELETE FROM song_aggregates WHERE song_id = v_song_id;
+        ELSE
+          MERGE INTO song_aggregates sa
+          USING (SELECT v_song_id AS song_id FROM dual) src
+          ON (sa.song_id = src.song_id)
+          WHEN MATCHED THEN
+            UPDATE SET rating_count = v_cnt, rating_avg = v_avg, last_rated_at = v_last
+          WHEN NOT MATCHED THEN
+            INSERT (song_id, rating_count, rating_avg, last_rated_at)
+            VALUES (v_song_id, v_cnt, v_avg, v_last);
+        END IF;
+      END;
+    END LOOP;
+  END AFTER STATEMENT;
+END trg_ratings_agg;
 /
 
 --------------------------------------------------------
@@ -89,3 +137,6 @@ SELECT
 FROM listening_history lh
 JOIN users u ON lh.user_id = u.id
 JOIN songs s ON lh.song_id = s.id;
+
+
+
